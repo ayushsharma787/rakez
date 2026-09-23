@@ -36,7 +36,7 @@ back navigation must work everywhere.
 - `src/tools.jsx` — KPI dictionary / sources / Excel build, BE re-scoring
   worksheet, mystery-shop log, build options
 - `src/App.jsx` — screen routing, back map, app state, actions, toasts
-- `src/assets/photos/` — drop-in slot for licensed building photographs
+- `src/assets/photos/` — building photographs; `rakez-hq.webp` (supplied by the user) is shown as six different crops, one per section
   (see its README)
 
 ## Rules
@@ -47,12 +47,12 @@ back navigation must work everywhere.
 - Never invent findings, control IDs or figures: baselines and thresholds come
   only from the build spec; anything reconstructed (BE dimension scores) is
   labelled as a sample reconstruction.
-- Design: 420px frame on phones, 1080px on `lg`; the frame is transparent so
-  the building imagery shows through scene bands between opaque panels. Teal
-  primary (buttons/progress), spec navy for titles, spec RAG fills
+- Design: dark bronze theme (`--color-ink` warm near-black panels, `--color-gold` accents, thin underline tabs, tick bars, light-weight numerals) after the reference dashboard; 420px frame on phones, 1080px on `lg`; the frame is transparent so
+  the building imagery shows through scene bands between opaque panels. Gold
+  primary (buttons/progress), spec RAG fills
   (`bg-rag-*`); red only for RAG red / the target marker; status colours
   always ship with an icon + text label, never colour alone.
-- Motion: `anim-screen` on every screen root, press-scale on every tappable,
+- Motion: every `Panel` unfolds via `useReveal` (IntersectionObserver, rotate-and-rise; no clip-path, which Chromium counts against intersection); `anim-screen` on every screen root, press-scale on every tappable,
   a toast after every action; backdrop drift is disabled under
   `prefers-reduced-motion`.
 - Plain JavaScript + JSX (no TypeScript); Tailwind utility classes for styling.

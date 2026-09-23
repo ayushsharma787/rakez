@@ -791,10 +791,10 @@ export const GOVERNANCE = {
 // it; until then the generated skyline plate is used and labelled as such.
 // ---------------------------------------------------------------------------
 export const SCENES = [
-  { id: 'corniche', title: 'Ras Al Khaimah city towers', file: 'corniche.jpg', credit: null, style: 'city', palette: ['#0b1e3a', '#3a5f8a', '#f0a35c'] },
-  { id: 'al-hamra', title: 'Al Hamra Industrial Zone', file: 'al-hamra.jpg', credit: null, style: 'towers', palette: ['#10233f', '#1f3a5f', '#e9b872'] },
-  { id: 'business-zone', title: 'RAKEZ Business Zone offices', file: 'business-zone.jpg', credit: null, style: 'offices', palette: ['#0f2a33', '#2a7d8c', '#d9e6ea'] },
-  { id: 'industrial', title: 'Al Ghail & Al Hulaila industrial zones', file: 'industrial.jpg', credit: null, style: 'sheds', palette: ['#2b1d16', '#7a4a2b', '#f2c58a'] },
-  { id: 'academic', title: 'RAKEZ Academic Zone campus', file: 'academic.jpg', credit: null, style: 'campus', palette: ['#132238', '#4b6d8c', '#f6d7a5'] },
-  { id: 'mountains', title: 'City below the Hajar mountains', file: 'mountains.jpg', credit: null, style: 'mountains', palette: ['#1a1330', '#5c3b5e', '#f39c6b'] },
+  { id: 'corniche', title: 'RAK Free Trade Zone Authority HQ', file: 'rakez-hq.webp', credit: 'Photo supplied by RAKEZ', focus: '50% 40%', zoom: 1, style: 'city', palette: ['#0b1e3a', '#3a5f8a', '#f0a35c'] },
+  { id: 'al-hamra', title: 'HQ · the RAK towers', file: 'rakez-hq.webp', credit: 'Photo supplied by RAKEZ', focus: '78% 30%', zoom: 1.35, style: 'towers', palette: ['#10233f', '#1f3a5f', '#e9b872'] },
+  { id: 'business-zone', title: 'HQ · Free Trade Zone entrance', file: 'rakez-hq.webp', credit: 'Photo supplied by RAKEZ', focus: '22% 62%', zoom: 1.45, style: 'offices', palette: ['#0f2a33', '#2a7d8c', '#d9e6ea'] },
+  { id: 'industrial', title: 'HQ · east wing', file: 'rakez-hq.webp', credit: 'Photo supplied by RAKEZ', focus: '92% 55%', zoom: 1.5, style: 'sheds', palette: ['#2b1d16', '#7a4a2b', '#f2c58a'] },
+  { id: 'academic', title: 'HQ · the palm forecourt', file: 'rakez-hq.webp', credit: 'Photo supplied by RAKEZ', focus: '40% 85%', zoom: 1.4, style: 'campus', palette: ['#132238', '#4b6d8c', '#f6d7a5'] },
+  { id: 'mountains', title: 'HQ · full elevation', file: 'rakez-hq.webp', credit: 'Photo supplied by RAKEZ', focus: '50% 55%', zoom: 1.08, style: 'mountains', palette: ['#1a1330', '#5c3b5e', '#f39c6b'] },
 ]

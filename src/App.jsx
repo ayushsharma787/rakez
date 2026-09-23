@@ -216,33 +216,33 @@ export default function App() {
       <div className="relative z-10 flex min-h-screen justify-center">
         <div className="relative min-h-screen w-full max-w-[420px] border-x border-white/10 lg:max-w-[1080px]">
           {showHeader && (
-            <header className="sticky top-0 z-40 flex items-center justify-between rounded-b-2xl border-b border-stone-200 bg-stone-50/90 px-4 py-3 backdrop-blur">
+            <header className="sticky top-0 z-40 flex items-center justify-between rounded-b-2xl border-b border-gold/20 bg-ink/85 px-4 py-3 backdrop-blur">
               {menuOpen && (
-                <nav className="anim-pop absolute right-3 top-full z-50 mt-1 flex w-64 flex-col overflow-hidden rounded-2xl border border-stone-200 bg-white py-1.5 shadow-2xl">
+                <nav className="anim-pop absolute right-3 top-full z-50 mt-1 flex w-64 flex-col overflow-hidden rounded-2xl border border-gold/20 bg-panel py-1.5 shadow-2xl">
                   {MENU.map((m) => (
-                    <button key={m.label} className="px-4 py-2.5 text-left text-sm font-semibold text-stone-700 hover:bg-teal-50" onClick={m.act}>
+                    <button key={m.label} className="px-4 py-2.5 text-left text-sm font-semibold text-stone-500 hover:bg-gold/10" onClick={m.act}>
                       {m.label}
                     </button>
                   ))}
                 </nav>
               )}
               {canBack ? (
-                <button className="flex h-9 w-9 items-center justify-center rounded-full border border-stone-200 bg-white text-stone-500 transition hover:text-teal-700" onClick={goBack} aria-label="Back">
+                <button className="flex h-9 w-9 items-center justify-center rounded-full border border-gold/20 bg-panel text-stone-400 transition hover:text-gold" onClick={goBack} aria-label="Back">
                   ←
                 </button>
               ) : (
                 <span className="w-9" />
               )}
               <button className="flex min-w-0 items-baseline gap-2" onClick={() => go('welcome')} aria-label={`${BRAND.name} home`}>
-                <span className="rounded-lg bg-navy px-2 py-0.5 text-sm font-bold text-white">{BRAND.accent}</span>
-                <span className="truncate text-lg font-extrabold tracking-tight text-stone-900">Scorecard</span>
+                <span className="rounded-lg bg-gold px-2 py-0.5 text-sm font-bold text-ink">{BRAND.accent}</span>
+                <span className="truncate text-lg font-extrabold tracking-tight text-stone-100">Scorecard</span>
                 <span className="hidden lg:inline">
                   <SceneChip scene={scene} />
                 </span>
               </button>
               {showMenu ? (
                 <button
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-stone-200 bg-white text-stone-500 transition hover:text-teal-700"
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-gold/20 bg-panel text-stone-400 transition hover:text-gold"
                   onClick={() => setMenuOpen((o) => !o)}
                   aria-label="Menu"
                   aria-expanded={menuOpen}

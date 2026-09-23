@@ -1,12 +1,12 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 
 /** Slim rounded progress bar. Label lives outside, in text tokens.
  * `marker` (0–100) draws the spec's red target marker on hero bars. */
 export function ProgressBar({ pct, tone = 'brand', size = 'md', marker = null }) {
-  const fill = { brand: 'bg-teal-600', warn: 'bg-amber-500', bad: 'bg-red-500', good: 'bg-emerald-500', navy: 'bg-navy' }[tone] || 'bg-teal-600'
+  const fill = { brand: 'bg-gold', warn: 'bg-amber-500', bad: 'bg-red-500', good: 'bg-emerald-500', navy: 'bg-gold text-ink' }[tone] || 'bg-gold'
   return (
     <div
-      className={`relative w-full overflow-visible rounded-full bg-stone-200/70 ${size === 'sm' ? 'h-1.5' : 'h-2.5'}`}
+      className={`relative w-full overflow-visible rounded-full bg-white/10 ${size === 'sm' ? 'h-1.5' : 'h-2.5'}`}
       role="progressbar"
       aria-valuenow={Math.round(pct)}
       aria-valuemin={0}
@@ -27,9 +27,9 @@ export function ProgressBar({ pct, tone = 'brand', size = 'md', marker = null })
 /** Status chip — color is never alone: icon + label always accompany it. */
 export function StatusChip({ meta, detail }) {
   const tone = {
-    good: 'bg-emerald-50 text-emerald-700',
-    warn: 'bg-amber-100 text-amber-800',
-    bad: 'bg-red-50 text-red-700',
+    good: 'bg-emerald-400/10 text-emerald-300',
+    warn: 'bg-amber-400/15 text-amber-200',
+    bad: 'bg-red-400/10 text-red-300',
     red: 'bg-rag-red-bg text-rag-red-fg',
     amber: 'bg-rag-amber-bg text-rag-amber-fg',
     green: 'bg-rag-green-bg text-rag-green-fg',
@@ -86,11 +86,11 @@ export function Modal({ title, onClose, children, sheet = false, wide = false })
   }, [])
   return (
     <div
-      className={`anim-fade fixed inset-0 z-50 flex justify-center bg-stone-900/45 ${sheet ? 'items-end' : 'items-center p-4'}`}
+      className={`anim-fade fixed inset-0 z-50 flex justify-center bg-gold text-ink/45 ${sheet ? 'items-end' : 'items-center p-4'}`}
       onClick={onClose}
     >
       <div
-        className={`w-full ${wide ? 'max-w-[640px]' : 'max-w-[420px]'} overflow-y-auto bg-white shadow-2xl ${
+        className={`w-full ${wide ? 'max-w-[640px]' : 'max-w-[420px]'} overflow-y-auto bg-panel shadow-2xl ${
           sheet ? 'anim-rise max-h-[90vh] rounded-t-3xl' : 'anim-pop max-h-[86vh] rounded-3xl'
         }`}
         role="dialog"
@@ -98,10 +98,10 @@ export function Modal({ title, onClose, children, sheet = false, wide = false })
         aria-label={title || 'Dialog'}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="sticky top-0 z-10 flex items-center justify-between bg-white px-5 pt-4">
+        <div className="sticky top-0 z-10 flex items-center justify-between bg-panel px-5 pt-4">
           {title ? <h3 className="text-lg font-bold">{title}</h3> : <span />}
           <button
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-stone-100 text-stone-500 hover:bg-stone-200"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-white/[0.06] text-stone-400 hover:bg-white/10"
             onClick={onClose}
             aria-label="Close"
           >
@@ -119,7 +119,7 @@ export function Toast({ toast }) {
   return (
     <div
       key={toast.key}
-      className="anim-toast fixed bottom-6 left-1/2 z-[60] max-w-[92vw] -translate-x-1/2 rounded-full bg-stone-900 px-5 py-2.5 text-center text-sm font-semibold text-white shadow-xl"
+      className="anim-toast fixed bottom-6 left-1/2 z-[60] max-w-[92vw] -translate-x-1/2 rounded-full bg-gold text-ink px-5 py-2.5 text-center text-sm font-semibold shadow-xl"
       role="status"
     >
       {toast.msg}
@@ -130,14 +130,14 @@ export function Toast({ toast }) {
 /** Segmented control for small pickers. */
 export function Segmented({ options, value, onChange, size = 'md' }) {
   return (
-    <div className="inline-flex rounded-full border border-stone-200 bg-stone-100 p-1" role="tablist">
+    <div className="inline-flex gap-1 border-b border-gold/20" role="tablist">
       {options.map((o) => (
         <button
           key={o.value}
           role="tab"
           aria-selected={value === o.value}
-          className={`rounded-full ${size === 'sm' ? 'px-3 py-1 text-xs' : 'px-4 py-1.5 text-sm'} font-semibold transition-all ${
-            value === o.value ? 'bg-white text-stone-900 shadow' : 'text-stone-500 hover:text-stone-700'
+          className={`-mb-px border-b-2 ${size === 'sm' ? 'px-3 py-1.5 text-[11px]' : 'px-4 py-2 text-xs'} font-bold uppercase tracking-widest transition-all ${
+            value === o.value ? 'border-gold text-gold-light' : 'border-transparent text-stone-400 hover:text-gold-light'
           }`}
           onClick={() => onChange(o.value)}
         >
@@ -150,30 +150,73 @@ export function Segmented({ options, value, onChange, size = 'md' }) {
 
 /** Eyebrow label used above sections and inside cards. */
 export function Eyebrow({ children, tone = 'brand' }) {
-  const c = { brand: 'text-teal-700', navy: 'text-navy', muted: 'text-stone-400', light: 'text-teal-200' }[tone]
+  const c = { brand: 'text-gold', navy: 'text-gold-light', muted: 'text-stone-400', light: 'text-gold-light' }[tone]
   return <span className={`block text-[11px] font-extrabold uppercase tracking-widest ${c}`}>{children}</span>
 }
 
 /** Opaque content panel — the frame itself is transparent so the building
  * photographs behind it show through the scene bands between panels. */
+export function useReveal() {
+  const ref = useRef(null)
+  const [on, setOn] = useState(false)
+  useEffect(() => {
+    const el = ref.current
+    if (!el || typeof IntersectionObserver === 'undefined') {
+      setOn(true)
+      return
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setOn(true)
+          io.disconnect()
+        }
+      },
+      { threshold: 0.08, rootMargin: '0px 0px -8% 0px' },
+    )
+    io.observe(el)
+    return () => io.disconnect()
+  }, [])
+  return [ref, on]
+}
+
 export function Panel({ children, className = '', as: Tag = 'section', ...rest }) {
+  const [ref, on] = useReveal()
   return (
-    <Tag className={`rounded-3xl bg-stone-50 p-4 shadow-xl shadow-stone-950/20 ${className}`} {...rest}>
+    <Tag ref={ref} className={`reveal ${on ? 'is-in' : ''} rounded-2xl border border-gold/20 bg-ink/88 p-4 shadow-xl shadow-black/50 backdrop-blur-sm ${className}`} {...rest}>
       {children}
     </Tag>
+  )
+}
+
+/** Thin tick bar (reference style): filled ticks = progress, a red tick = target. */
+export function TickBar({ pct, marker = null, tone = 'brand', ticks = 30 }) {
+  const fill = { brand: 'bg-gold', good: 'bg-emerald-300', warn: 'bg-amber-300', bad: 'bg-red-300' }[tone] || 'bg-gold'
+  const filled = Math.round((Math.max(0, Math.min(100, pct)) / 100) * ticks)
+  const markerIdx = marker == null ? -1 : Math.round((Math.max(0, Math.min(100, marker)) / 100) * (ticks - 1))
+  return (
+    <div className="flex h-5 items-end gap-[3px]" role="progressbar" aria-valuenow={Math.round(pct)} aria-valuemin={0} aria-valuemax={100}>
+      {Array.from({ length: ticks }, (_, i) => (
+        <span
+          key={i}
+          className={`flex-1 rounded-[1px] transition-all duration-500 ${i === markerIdx ? 'bg-red-400' : i < filled ? fill : 'bg-white/10'}`}
+          style={{ height: i === markerIdx ? '100%' : i < filled ? `${55 + ((i * 7) % 4) * 12}%` : '35%' }}
+        />
+      ))}
+    </div>
   )
 }
 
 /** Primary/secondary/outline/ghost button shorthands. */
 export const btn = {
   primary:
-    'inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-teal-700 px-5 py-3.5 text-[15px] font-bold text-white shadow-lg shadow-teal-700/25 transition active:scale-[0.98] hover:bg-teal-800 disabled:cursor-not-allowed disabled:bg-stone-200 disabled:text-stone-500 disabled:shadow-none',
+    'inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-gold to-gold-light px-5 py-3.5 text-[15px] font-bold text-ink shadow-lg shadow-gold/25 transition active:scale-[0.98] hover:bg-gold-light disabled:cursor-not-allowed disabled:bg-none disabled:bg-white/10 disabled:text-stone-400 disabled:shadow-none',
   secondary:
-    'inline-flex items-center justify-center gap-2 rounded-xl bg-teal-50 px-4 py-2 text-sm font-bold text-teal-800 transition active:scale-[0.98] hover:bg-teal-100',
+    'inline-flex items-center justify-center gap-2 rounded-xl bg-gold/10 px-4 py-2 text-sm font-bold text-gold-light transition active:scale-[0.98] hover:bg-gold/20',
   outline:
-    'inline-flex w-full items-center justify-center gap-2 rounded-2xl border-[1.5px] border-stone-200 bg-white px-5 py-3 text-[15px] font-bold text-stone-700 transition active:scale-[0.98] hover:border-teal-600 hover:text-teal-800',
+    'inline-flex w-full items-center justify-center gap-2 rounded-2xl border-[1.5px] border-gold/20 bg-panel px-5 py-3 text-[15px] font-bold text-stone-500 transition active:scale-[0.98] hover:border-gold hover:text-gold-light',
   ghost:
-    'inline-flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-sm font-bold text-teal-800 transition hover:bg-teal-50',
+    'inline-flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-sm font-bold text-gold-light transition hover:bg-gold/10',
   light:
-    'inline-flex w-full items-center justify-center gap-2 rounded-2xl border-[1.5px] border-white/40 bg-white/10 px-5 py-3 text-[15px] font-bold text-white backdrop-blur transition active:scale-[0.98] hover:bg-white/20',
+    'inline-flex w-full items-center justify-center gap-2 rounded-2xl border-[1.5px] border-white/40 bg-panel/10 px-5 py-3 text-[15px] font-bold text-white backdrop-blur transition active:scale-[0.98] hover:bg-panel/20',
 }
