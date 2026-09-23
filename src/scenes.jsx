@@ -143,7 +143,7 @@ export function usePhotos() {
 
 export function sceneCaption(scene) {
   if (!scene) return ''
-  return scene.isPhoto ? `${scene.title} · ${scene.credit || 'Photograph'}` : `${scene.title} · Illustration`
+  return scene.isPhoto ? `${scene.title}${scene.credit ? ` · ${scene.credit}` : ''}` : `${scene.title} · Illustration`
 }
 
 /** Fixed, full-bleed backdrop. Cross-fades on `active`; drifts with scroll. */
@@ -172,10 +172,18 @@ export function ScrollBackdrop({ scenes, active }) {
     <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden bg-stone-950" aria-hidden="true">
       <div ref={layerRef} className="absolute inset-0 will-change-transform">
         {scenes.map((s) => (
-          <img key={s.id} src={s.src} alt="" className={`scene-photo ${s.id === active ? 'is-active' : ''}`} draggable="false" />
+          <img
+            key={s.id}
+            src={s.src}
+            alt=""
+            className={`scene-photo ${s.id === active ? 'is-active' : ''}`}
+            style={{ objectPosition: s.focus || '50% 50%', transform: `scale(${s.zoom || 1})`, transition: 'opacity 0.9s ease, transform 1.4s ease' }}
+            draggable="false"
+          />
         ))}
       </div>
-      <div className="absolute inset-0 bg-gradient-to-b from-stone-950/55 via-stone-950/25 to-stone-950/75" />
+      <div className="absolute inset-0 bg-gradient-to-b from-[#070503]/70 via-[#1b1108]/35 to-[#070503]/85" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_30%,rgba(212,167,106,0.18),transparent_60%)]" />
     </div>
   )
 }
@@ -216,7 +224,7 @@ export function useSceneObserver(rootRef, onScene, deps = []) {
 export function SceneBand({ scene, label, height = 'h-28' }) {
   return (
     <div className={`relative flex ${height} items-end px-2 pb-2`} aria-hidden="true">
-      <span className="inline-flex max-w-full items-center gap-1.5 truncate rounded-full bg-stone-950/55 px-3 py-1.5 text-[11px] font-semibold text-white backdrop-blur">
+      <span className="inline-flex max-w-full items-center gap-1.5 truncate rounded-full bg-black/55 px-3 py-1.5 text-[11px] font-semibold text-white backdrop-blur">
         <span>📍</span>
         <span className="truncate">{label || sceneCaption(scene)}</span>
       </span>
@@ -228,7 +236,7 @@ export function SceneBand({ scene, label, height = 'h-28' }) {
 export function SceneChip({ scene }) {
   if (!scene) return null
   return (
-    <span className="inline-flex max-w-full items-center gap-1 truncate rounded-full bg-stone-900/70 px-2.5 py-1 text-[11px] font-semibold text-white">
+    <span className="inline-flex max-w-full items-center gap-1 truncate rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-semibold text-white">
       <span aria-hidden="true">🏙️</span>
       <span className="truncate">{sceneCaption(scene)}</span>
     </span>

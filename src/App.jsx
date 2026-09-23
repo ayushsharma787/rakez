@@ -17,7 +17,7 @@ import { ScrollBackdrop, usePhotos, useSceneState, SceneChip } from './scenes.js
 const SCREEN_SCENE = { welcome: 'corniche', quiz: 'al-hamra', generating: 'al-hamra', plan: 'business-zone', dictionary: 'academic', rescoring: 'mountains', shop: 'industrial', build: 'corniche' }
 
 export default function App() {
-  const [screen, setScreen] = useState('welcome')
+  const [screen, setScreen] = useState('dashboard')
 
   // Pre-loaded persona so the demo looks alive on first open.
   const [profile, setProfile] = useState({ name: PERSONA.name, bio: PERSONA.bio, answers: { ...PERSONA.answers } })
@@ -32,7 +32,7 @@ export default function App() {
   const [peerEdit, setPeerEdit] = useState(false)
   const [view, setView] = useState('interactive')
   const [benchMode, setBenchMode] = useState('3d')
-  const [onlyMine, setOnlyMine] = useState(false)
+  const [personalised, setPersonalised] = useState(false)
   const [buildChoice, setBuildChoice] = useState(null)
   const [quizReturn, setQuizReturn] = useState('dashboard')
 
@@ -84,7 +84,7 @@ export default function App() {
     setEntries({})
     setShops([])
     setBeScores(beBaselineScores())
-    setOnlyMine(answers.role !== 'leadership')
+    setPersonalised(true)
     setActiveTileId(null)
     setScreen('generating')
   }
@@ -185,7 +185,7 @@ export default function App() {
 
   // ------------------------------------------------------------- Navigation
 
-  const BACK = { dashboard: 'welcome', plan: 'dashboard', dictionary: 'dashboard', rescoring: 'dashboard', shop: 'dashboard', build: 'dashboard' }
+  const BACK = { welcome: 'dashboard', plan: 'dashboard', dictionary: 'dashboard', rescoring: 'dashboard', shop: 'dashboard', build: 'dashboard' }
   const canBack = screen in BACK && screen !== 'quiz'
   const goBack = () => {
     setMenuOpen(false)
@@ -195,17 +195,26 @@ export default function App() {
     window.scrollTo({ top: 0 })
   }
 
-  const showHeader = screen !== 'welcome'
-  const showMenu = ['dashboard', 'plan', 'dictionary', 'rescoring', 'shop', 'build'].includes(screen)
+  const showHeader = true
+  const showMenu = ['dashboard', 'plan', 'dictionary', 'rescoring', 'shop', 'build', 'welcome'].includes(screen)
   const MENU = [
     { label: '📊 Scorecard', act: () => go('dashboard') },
+    { label: '🧭 Personalise my view', act: () => startQuiz('dashboard') },
+    {
+      label: view === 'slide' ? '🧊 Interactive layout' : '🖼️ Slide layout (spec §3)',
+      act: () => {
+        const v = view === 'slide' ? 'interactive' : 'slide'
+        setView(v)
+        go('dashboard')
+        showToast(v === 'slide' ? '🖼️ Slide layout — 3 hero, 4×4 tiles, 1 chart, nothing else' : '🧊 Interactive layout — skyline and scenes back on')
+      },
+    },
     { label: '🗺️ Pilot plan', act: () => go('plan') },
     { label: '📖 KPI dictionary', act: () => go('dictionary') },
-    { label: '🧮 BE re-scoring', act: () => go('rescoring') },
+    { label: '🧮 Brand Equity re-scoring', act: () => go('rescoring') },
     { label: '🕵️ Mystery-shop log', act: () => go('shop') },
     { label: '🧱 Build options', act: () => go('build') },
-    { label: '🔄 Retake questionnaire', act: () => startQuiz('dashboard') },
-    { label: '🏠 Welcome screen', act: () => go('welcome') },
+    { label: 'ℹ️ About this scorecard', act: () => go('welcome') },
   ]
 
   const tileSheetScreens = ['dashboard', 'dictionary', 'shop', 'plan']
@@ -216,33 +225,33 @@ export default function App() {
       <div className="relative z-10 flex min-h-screen justify-center">
         <div className="relative min-h-screen w-full max-w-[420px] border-x border-white/10 lg:max-w-[1080px]">
           {showHeader && (
-            <header className="sticky top-0 z-40 flex items-center justify-between rounded-b-2xl border-b border-stone-200 bg-stone-50/90 px-4 py-3 backdrop-blur">
+            <header className="sticky top-0 z-40 flex items-center justify-between rounded-b-2xl border-b border-gold/20 bg-ink/85 px-4 py-3 backdrop-blur">
               {menuOpen && (
-                <nav className="anim-pop absolute right-3 top-full z-50 mt-1 flex w-64 flex-col overflow-hidden rounded-2xl border border-stone-200 bg-white py-1.5 shadow-2xl">
+                <nav className="anim-pop absolute right-3 top-full z-50 mt-1 flex w-64 flex-col overflow-hidden rounded-2xl border border-gold/20 bg-panel py-1.5 shadow-2xl">
                   {MENU.map((m) => (
-                    <button key={m.label} className="px-4 py-2.5 text-left text-sm font-semibold text-stone-700 hover:bg-teal-50" onClick={m.act}>
+                    <button key={m.label} className="px-4 py-2.5 text-left text-sm font-semibold text-stone-500 hover:bg-gold/10" onClick={m.act}>
                       {m.label}
                     </button>
                   ))}
                 </nav>
               )}
               {canBack ? (
-                <button className="flex h-9 w-9 items-center justify-center rounded-full border border-stone-200 bg-white text-stone-500 transition hover:text-teal-700" onClick={goBack} aria-label="Back">
+                <button className="flex h-9 w-9 items-center justify-center rounded-full border border-gold/20 bg-panel text-stone-400 transition hover:text-gold" onClick={goBack} aria-label="Back">
                   ←
                 </button>
               ) : (
                 <span className="w-9" />
               )}
               <button className="flex min-w-0 items-baseline gap-2" onClick={() => go('welcome')} aria-label={`${BRAND.name} home`}>
-                <span className="rounded-lg bg-navy px-2 py-0.5 text-sm font-bold text-white">{BRAND.accent}</span>
-                <span className="truncate text-lg font-extrabold tracking-tight text-stone-900">Scorecard</span>
+                <span className="rounded-lg bg-gold px-2 py-0.5 text-sm font-bold text-ink">{BRAND.accent}</span>
+                <span className="truncate text-lg font-extrabold tracking-tight text-stone-100">Scorecard</span>
                 <span className="hidden lg:inline">
                   <SceneChip scene={scene} />
                 </span>
               </button>
               {showMenu ? (
                 <button
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-stone-200 bg-white text-stone-500 transition hover:text-teal-700"
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-gold/20 bg-panel text-stone-400 transition hover:text-gold"
                   onClick={() => setMenuOpen((o) => !o)}
                   aria-label="Menu"
                   aria-expanded={menuOpen}
@@ -258,7 +267,7 @@ export default function App() {
           {menuOpen && <div className="fixed inset-0 z-30" onClick={() => setMenuOpen(false)} />}
 
           {screen === 'welcome' && <Welcome scene={scene} onStart={() => go('dashboard')} onFresh={() => startQuiz('welcome')} />}
-          {screen === 'quiz' && <Quiz initial={profile.answers} onDone={finishQuiz} onBackOut={() => setScreen(quizReturn)} />}
+          {screen === 'quiz' && <Quiz initial={profile.answers} onDone={finishQuiz} onBackOut={() => setScreen(quizReturn || 'dashboard')} />}
           {screen === 'generating' && <Generating onReady={viewReady} />}
           {screen === 'dashboard' && (
             <Dashboard
@@ -266,17 +275,8 @@ export default function App() {
               card={card}
               prog={prog}
               view={view}
-              onView={(v) => {
-                setView(v)
-                showToast(v === 'slide' ? '🖼️ Slide view — 3 hero, 4×4 tiles, 1 chart, nothing else' : '🧊 Interactive view — 3D skyline and scenes back on')
-              }}
-              onlyMine={onlyMine}
-              onOnlyMine={(v) => {
-                setOnlyMine(v)
-                showToast(v ? 'Dimming tiles you don’t own' : 'Showing every tile')
-              }}
+              personalised={personalised}
               onOpenTile={setActiveTileId}
-              onRestart={() => startQuiz('dashboard')}
               onGoto={goto}
               peers={peers}
               onEditPeers={() => setPeerEdit(true)}
@@ -284,6 +284,7 @@ export default function App() {
               onBenchMode={setBenchMode}
               scenes={scenes}
               onScene={setScene}
+              activeScene={sceneId}
               entriesCount={entriesCount}
               onResetEntries={resetEntries}
             />

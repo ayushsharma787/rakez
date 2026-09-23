@@ -67,14 +67,11 @@ async function run(browser, viewport, tag) {
   }
 
   await page.goto(BASE)
-  await page.getByRole('button', { name: /Open the Sep 2026 scorecard/ }).waitFor()
-  await shot('01-welcome')
-  await noHScroll(page, 'welcome')
-  check((await activeScene(page)) === 0, 'welcome shows scene 0')
-
-  // --- Dashboard
-  await page.getByRole('button', { name: /Open the Sep 2026 scorecard/ }).click()
-  await page.getByText('RAKEZ · Acquisition & Brand Scorecard').waitFor()
+  await page.getByRole('heading', { name: 'Acquisition & Brand Scorecard' }).waitFor()
+  check((await activeScene(page)) === 0, 'landing shows scene 0')
+  await wait(1200)
+  check(await page.getByText('failing today').first().isVisible(), 'overview explains the three status words')
+  await shot('01-landing')
   await wait(900)
   const canvases = await page.locator('canvas').count()
   check(canvases >= 1, `dashboard renders WebGL canvases (${canvases})`)
@@ -129,7 +126,7 @@ async function run(browser, viewport, tag) {
   await shot('07-plan')
   await noHScroll(page, 'plan')
   await page.getByRole('button', { name: 'Back', exact: true }).click()
-  await page.getByText('RAKEZ · Acquisition & Brand Scorecard').waitFor()
+  await page.getByRole('heading', { name: 'Acquisition & Brand Scorecard' }).waitFor()
   await page.getByRole('button', { name: /^Call answered ≤ 3 rings:/ }).click()
   await page.getByRole('dialog').waitFor()
   const slider = page.getByRole('dialog').locator('input[type=range]')
@@ -141,22 +138,24 @@ async function run(browser, viewport, tag) {
   await page.getByRole('button', { name: /Apply demo value/ }).click()
   await wait(300)
   check(await page.getByRole('button', { name: /^Call answered ≤ 3 rings: 82%/ }).isVisible(), 'tile shows the applied 82% (amber)')
-  check(await page.getByText(/Scenario · 1 demo entry/).isVisible(), 'header pill switches to Scenario')
+  check(await page.getByText(/1 demo entry/).isVisible(), 'header pill counts the demo entry')
 
-  // Slide view / interactive view.
-  await page.getByRole('tab', { name: /Slide/ }).click()
-  await wait(400)
-  check((await page.locator('canvas').count()) === 0, 'slide view hides the 3D models')
+  // Slide layout / interactive layout via the menu.
+  await page.getByRole('button', { name: 'Menu', exact: true }).click()
+  await page.locator('nav').getByRole('button', { name: /Slide layout/ }).click()
+  await wait(500)
+  check((await page.locator('canvas').count()) === 0, 'slide layout hides the 3D models')
   await shot('09-slide-view')
   await noHScroll(page, 'slide view')
-  await page.getByRole('tab', { name: /Interactive/ }).click()
-  await wait(600)
+  await page.getByRole('button', { name: 'Menu', exact: true }).click()
+  await page.locator('nav').getByRole('button', { name: /Interactive layout/ }).click()
+  await wait(700)
 
   // Benchmark 2D + peers modal.
   await page.getByRole('tab', { name: /2D/ }).click()
   await wait(200)
   check((await page.getByRole('img', { name: /Benchmark/ }).count()) === 1, '2D benchmark SVG renders')
-  await page.getByRole('button', { name: /Edit peer values/ }).click()
+  await page.getByRole('button', { name: /Enter peer values/ }).click()
   await page.getByRole('dialog').waitFor()
   await page.getByLabel('IFZA Brand Equity score').fill('66')
   await page.getByRole('button', { name: /Save peer values/ }).click()
@@ -166,15 +165,15 @@ async function run(browser, viewport, tag) {
   await wait(400)
 
   // Reset scenario.
-  await page.getByRole('button', { name: 'Reset to baseline' }).click()
+  await page.getByRole('button', { name: 'reset', exact: true }).click()
   await wait(200)
-  check(await page.getByText('Baseline Sep 2026').first().isVisible(), 'reset restores the baseline pill')
+  check(await page.getByText(/Static mock-up · no live data/).isVisible(), 'reset restores the baseline pill')
 
   // --- Menu → every screen, back from each.
   const menuTargets = [
     ['Pilot plan', 'Make every tile sourceable', '10-plan'],
     ['KPI dictionary', 'KPI dictionary', '11-dictionary'],
-    ['BE re-scoring', 'Brand Equity re-scoring', '12-rescoring'],
+    ['Brand Equity re-scoring', 'Brand Equity re-scoring', '12-rescoring'],
     ['Mystery-shop log', 'Partner mystery shop', '13-shop'],
     ['Build options', 'Three build options', '14-build'],
   ]
@@ -200,13 +199,13 @@ async function run(browser, viewport, tag) {
       await wait(150)
       check(await page.getByText('Sheet 1 — Data (monthly entry)').isVisible(), 'excel tab renders')
     }
-    if (label === 'BE re-scoring') {
+    if (label === 'Brand Equity re-scoring') {
       await page.getByRole('radio', { name: '4' }).nth(1).click()
       await wait(150)
       check(await page.getByRole('button', { name: /Apply 56 to the scorecard/ }).isVisible(), 'BE composite recalculates live (48 → 56)')
       await shot('12b-rescoring-changed')
       await page.getByRole('button', { name: /Apply 56 to the scorecard/ }).click()
-      await page.getByText('RAKEZ · Acquisition & Brand Scorecard').waitFor()
+      await page.getByRole('heading', { name: 'Acquisition & Brand Scorecard' }).waitFor()
       await wait(300)
       check(await page.getByRole('button', { name: /^Indicator Brand Equity Score: 56/ }).isVisible(), 'applied composite shows on the hero card')
       continue
@@ -228,11 +227,12 @@ async function run(browser, viewport, tag) {
       check(await page.getByText(/Selected — Hand over as the pilot artefact/).isVisible(), 'build option confirms and flips the card')
     }
     await page.getByRole('button', { name: 'Back', exact: true }).click()
-    await page.getByText('RAKEZ · Acquisition & Brand Scorecard').waitFor()
+    await page.getByRole('heading', { name: 'Acquisition & Brand Scorecard' }).waitFor()
   }
 
   // --- Retake questionnaire end-to-end.
-  await page.getByRole('button', { name: /Retake the questionnaire/ }).click()
+  await page.getByRole('button', { name: 'Menu', exact: true }).click()
+  await page.locator('nav').getByRole('button', { name: /Personalise my view/ }).click()
   await page.getByRole('heading', { name: 'Which seat are you in?' }).waitFor()
   await shot('15-quiz')
   await page.getByRole('button', { name: /Sales ops/ }).click()
@@ -240,15 +240,19 @@ async function run(browser, viewport, tag) {
   await page.getByRole('button', { name: /Defend enquiry/ }).click()
   await page.getByText('Assembling your scorecard view…').waitFor()
   await shot('16-generating')
-  await page.getByText('RAKEZ · Acquisition & Brand Scorecard').waitFor({ timeout: 5000 })
+  await page.getByRole('heading', { name: 'Acquisition & Brand Scorecard' }).waitFor({ timeout: 8000 })
   await wait(400)
-  check(await page.getByText(/Weekly view/).isVisible(), 'weekly cadence banner appears for the new seat')
+  check(await page.getByText(/Viewing as Sales ops · weekly/).isVisible(), 'personalised chip names the new seat and cadence')
   check((await page.getByText('yours').count()) >= 2, 'sales-ops tiles are marked as yours')
   await shot('17-dashboard-salesops')
 
-  // Back to welcome from dashboard.
-  await page.getByRole('button', { name: 'Back', exact: true }).click()
-  await page.getByRole('button', { name: /Open the Sep 2026 scorecard/ }).waitFor()
+  // About screen and back.
+  await page.getByRole('button', { name: 'Menu', exact: true }).click()
+  await page.locator('nav').getByRole('button', { name: /About this scorecard/ }).click()
+  await page.getByRole('button', { name: /Back to the scorecard/ }).waitFor()
+  await shot('18-about')
+  await page.getByRole('button', { name: /Back to the scorecard/ }).click()
+  await page.getByRole('heading', { name: 'Acquisition & Brand Scorecard' }).waitFor()
 
   check(errors.length === 0, `no console/page errors${errors.length ? `: ${errors.slice(0, 5).join(' | ')}` : ''}`)
   await ctx.close()

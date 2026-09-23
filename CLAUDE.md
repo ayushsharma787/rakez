@@ -11,6 +11,7 @@ back navigation must work everywhere.
 
 ## Commands
 - Install: `npm install`
+- Deploy: Netlify builds via `netlify.toml` (command `npm ci && npm run build`, publish `dist`, Node 22)
 - Dev server: `npm run dev`
 - Build: `npm run build`
 - Preview build: `npm run preview`
@@ -35,10 +36,15 @@ back navigation must work everywhere.
 - `src/tools.jsx` — KPI dictionary / sources / Excel build, BE re-scoring
   worksheet, mystery-shop log, build options
 - `src/App.jsx` — screen routing, back map, app state, actions, toasts
-- `src/assets/photos/` — drop-in slot for licensed building photographs
+- `src/assets/photos/` — building photographs; `rakez-hq.webp` (supplied by the user) is shown as six different crops, one per section
   (see its README)
 
 ## Rules
+- Self-explanatory first: the app lands on the scorecard (no welcome gate); the
+  page is a chaptered scroll (Overview → 01 three numbers → 02–05 quadrants →
+  06 benchmark → 07 what next); status is shown in plain words (`plainLabel`:
+  Failing today / Not measured yet / Below target / On target), never only as
+  Red/Amber/Green. Personalisation, slide layout and the tools live in the menu.
 - Demo-first: no dead ends, no error states, no network calls, no persistence.
 - Guardrail: static mock-up — reads no RAKEZ data. Unsourced KPIs show a dash,
   never a placeholder number. Peer benchmark values are illustrative and are
@@ -46,12 +52,14 @@ back navigation must work everywhere.
 - Never invent findings, control IDs or figures: baselines and thresholds come
   only from the build spec; anything reconstructed (BE dimension scores) is
   labelled as a sample reconstruction.
-- Design: 420px frame on phones, 1080px on `lg`; the frame is transparent so
-  the building imagery shows through scene bands between opaque panels. Teal
-  primary (buttons/progress), spec navy for titles, spec RAG fills
+- Design: dark bronze theme (`--color-ink` warm near-black panels, `--color-gold` accents, thin underline tabs, tick bars, light-weight numerals) after the reference dashboard; 420px frame on phones, 1080px on `lg`; the frame is transparent so
+  the building imagery shows through scene bands between opaque panels. Gold
+  primary (buttons/progress), spec RAG fills
   (`bg-rag-*`); red only for RAG red / the target marker; status colours
   always ship with an icon + text label, never colour alone.
-- Motion: `anim-screen` on every screen root, press-scale on every tappable,
+- Motion: numbers count up (`CountUp`), ticks pop in sequence, hero cards flip in,
+  chapter numbers slide in, a scroll-progress bar and chapter rail track position;
+  every `Panel` unfolds via `useReveal` (IntersectionObserver, rotate-and-rise; no clip-path, which Chromium counts against intersection); `anim-screen` on every screen root, press-scale on every tappable,
   a toast after every action; backdrop drift is disabled under
   `prefers-reduced-motion`.
 - Plain JavaScript + JSX (no TypeScript); Tailwind utility classes for styling.
