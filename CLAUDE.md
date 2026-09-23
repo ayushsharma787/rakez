@@ -11,6 +11,7 @@ back navigation must work everywhere.
 
 ## Commands
 - Install: `npm install`
+- Deploy: Netlify builds via `netlify.toml` (command `npm ci && npm run build`, publish `dist`, Node 22)
 - Dev server: `npm run dev`
 - Build: `npm run build`
 - Preview build: `npm run preview`
