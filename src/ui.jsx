@@ -189,6 +189,94 @@ export function Panel({ children, className = '', as: Tag = 'section', ...rest }
   )
 }
 
+/** Animates a number from 0 to `value` the first time it scrolls into view. */
+export function CountUp({ value, format = (v) => String(Math.round(v)), duration = 1100, className = '' }) {
+  const [ref, on] = useReveal()
+  const [v, setV] = useState(0)
+  useEffect(() => {
+    if (!on) return
+    const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    if (reduce) {
+      setV(value)
+      return
+    }
+    let raf = 0
+    const t0 = performance.now()
+    const tick = (t) => {
+      const k = Math.min(1, (t - t0) / duration)
+      const e = 1 - Math.pow(1 - k, 3)
+      setV(value * e)
+      if (k < 1) raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [on, value, duration])
+  return (
+    <span ref={ref} className={`tabular-nums ${className}`}>
+      {format(v)}
+    </span>
+  )
+}
+
+/** Chapter header: number, title, one plain sentence saying what the section tells you. */
+export function Chapter({ n, title, says, right }) {
+  return (
+    <div className="mb-3 flex items-end justify-between gap-3">
+      <div className="min-w-0">
+        <div className="flex items-baseline gap-3">
+          <span className="chapter-num text-3xl font-light tabular-nums text-gold/70">{String(n).padStart(2, '0')}</span>
+          <h3 className="text-xl font-light tracking-tight text-stone-50 lg:text-2xl">{title}</h3>
+        </div>
+        {says && <p className="mt-1 text-[13px] text-stone-400">{says}</p>}
+        <div className="hairline mt-2" />
+      </div>
+      {right ? <div className="flex-none">{right}</div> : null}
+    </div>
+  )
+}
+
+/** Fixed right-hand rail of chapter dots + a top scroll-progress bar. */
+export function ScrollRail({ chapters, active, onJump }) {
+  const [pct, setPct] = useState(0)
+  useEffect(() => {
+    let raf = 0
+    const onScroll = () => {
+      cancelAnimationFrame(raf)
+      raf = requestAnimationFrame(() => {
+        const max = document.documentElement.scrollHeight - window.innerHeight
+        setPct(max > 0 ? Math.min(100, (window.scrollY / max) * 100) : 0)
+      })
+    }
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => {
+      cancelAnimationFrame(raf)
+      window.removeEventListener('scroll', onScroll)
+    }
+  }, [])
+  return (
+    <>
+      <div className="fixed left-0 right-0 top-0 z-[45] h-0.5 bg-white/5" aria-hidden="true">
+        <div className="h-full bg-gradient-to-r from-gold to-gold-light transition-[width] duration-200" style={{ width: `${pct}%` }} />
+      </div>
+      <nav className="fixed right-3 top-1/2 z-[45] hidden -translate-y-1/2 flex-col gap-3 lg:flex" aria-label="Chapters">
+        {chapters.map((c) => (
+          <button
+            key={c.id}
+            className="group flex items-center justify-end gap-2"
+            onClick={() => onJump(c.id)}
+            aria-label={`Go to ${c.title}`}
+            aria-current={active === c.id ? 'true' : undefined}
+          >
+            <span className={`rounded-full bg-black/60 px-2 py-0.5 text-[10px] font-bold text-gold-light transition ${active === c.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>{c.title}</span>
+            <span className={`block rounded-full transition-all duration-300 ${active === c.id ? 'h-6 w-1.5 bg-gold' : 'h-1.5 w-1.5 bg-white/30 group-hover:bg-gold/60'}`} />
+          </button>
+        ))}
+      </nav>
+    </>
+  )
+}
+
 /** Thin tick bar (reference style): filled ticks = progress, a red tick = target. */
 export function TickBar({ pct, marker = null, tone = 'brand', ticks = 30 }) {
   const fill = { brand: 'bg-gold', good: 'bg-emerald-300', warn: 'bg-amber-300', bad: 'bg-red-300' }[tone] || 'bg-gold'
@@ -199,8 +287,8 @@ export function TickBar({ pct, marker = null, tone = 'brand', ticks = 30 }) {
       {Array.from({ length: ticks }, (_, i) => (
         <span
           key={i}
-          className={`flex-1 rounded-[1px] transition-all duration-500 ${i === markerIdx ? 'bg-red-400' : i < filled ? fill : 'bg-white/10'}`}
-          style={{ height: i === markerIdx ? '100%' : i < filled ? `${55 + ((i * 7) % 4) * 12}%` : '35%' }}
+          className={`tick flex-1 rounded-[1px] ${i === markerIdx ? 'bg-red-400' : i < filled ? fill : 'bg-white/10'}`}
+          style={{ height: i === markerIdx ? '100%' : i < filled ? `${55 + ((i * 7) % 4) * 12}%` : '35%', animationDelay: `${i * 28}ms` }}
         />
       ))}
     </div>

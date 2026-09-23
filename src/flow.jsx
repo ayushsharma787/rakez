@@ -9,7 +9,7 @@ import { SceneChip } from './scenes.jsx'
 
 export function Welcome({ onStart, onFresh, scene }) {
   return (
-    <div className="anim-screen flex min-h-screen flex-col justify-between gap-6 px-5 pb-10 pt-8">
+    <div className="anim-screen flex min-h-[calc(100vh-64px)] flex-col justify-between gap-6 px-5 pb-10 pt-8">
       <div className="flex justify-center">
         <SceneChip scene={scene} />
       </div>

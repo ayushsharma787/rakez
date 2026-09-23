@@ -58,7 +58,9 @@ npm run verify     # Playwright walk-through of every screen + screenshots
 
 ## Screens
 
-welcome → questionnaire → generating → **scorecard** (⇄ tile sheet, peer
+**scorecard** (landing; chaptered scroll) → menu: personalise (questionnaire) · slide layout · pilot plan · dictionary · BE re-scoring · mystery-shop log · build options · about.
+
+Old flow for reference: welcome → questionnaire → generating → **scorecard** (⇄ tile sheet, peer
 modal) → pilot plan (⇄ step sheet) · KPI dictionary · BE re-scoring ·
 mystery-shop log · build options. Back works from every screen; Escape closes
 the topmost modal.

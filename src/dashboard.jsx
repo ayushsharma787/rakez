@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { BRAND, QUADRANTS, ROLE_META, CADENCE_META, BENCHMARK, SOURCES } from './data.js'
 import { STATUS_META, status, fmtValue, scalePct, ownedBy, matchesCadence, sourceById } from './engine.js'
-import { Modal, ProgressBar, TickBar, StatusChip, Segmented, Eyebrow, Panel, btn } from './ui.jsx'
+import { Modal, ProgressBar, TickBar, StatusChip, Segmented, Eyebrow, Panel, Chapter, CountUp, ScrollRail, btn } from './ui.jsx'
 import { SceneBand, useSceneObserver, sceneCaption } from './scenes.jsx'
 import { Skyline3D, Benchmark3D, ModelCaption } from './three.jsx'
 
@@ -19,6 +19,15 @@ function RagBadge({ tile, small = false }) {
       <span aria-hidden="true">{m.icon}</span> {m.label}
     </span>
   )
+}
+
+/** Counts numeric values up from zero; leaves words ('Held', 'No', dashes) static. */
+function AnimatedValue({ tile, className }) {
+  if (tile.value == null) return <span className={className}>{tile.display}</span>
+  const f = fmtValue(tile, tile.value)
+  const prefix = tile.display === `~${f}` ? '~' : tile.display === f ? '' : null
+  if (prefix == null) return <span className={className}>{tile.display}</span>
+  return <CountUp value={tile.value} format={(v) => `${prefix}${fmtValue(tile, Number(v.toFixed(tile.input?.step < 1 ? 1 : 0)))}`} className={className} />
 }
 
 function Tile({ tile, dim, mine, onOpen }) {
@@ -43,7 +52,7 @@ function Tile({ tile, dim, mine, onOpen }) {
         </span>
       </span>
       <span className="mt-1 flex items-baseline gap-1.5">
-        <span className={`text-2xl font-light tabular-nums leading-none ${m.fg}`}>{tile.display}</span>
+        <AnimatedValue tile={tile} className={`text-2xl font-light tabular-nums leading-none ${m.fg}`} />
         {tile.detail && <span className="truncate text-[10px] font-semibold text-stone-400">{tile.detail}</span>}
       </span>
       <span className="mt-2 flex items-center justify-between gap-1">
@@ -70,7 +79,7 @@ function HeroCard({ tile, focus, onOpen }) {
       <span className="text-[10px] font-extrabold uppercase leading-tight tracking-wide text-stone-400 sm:text-[11px]">
         <span aria-hidden="true">{tile.icon}</span> {tile.label}
       </span>
-      <span className={`mt-2 text-3xl font-light tabular-nums leading-none tracking-tight sm:text-5xl ${m.fg}`}>{tile.display}</span>
+      <AnimatedValue tile={tile} className={`mt-2 block text-3xl font-light tabular-nums leading-none tracking-tight sm:text-5xl ${m.fg}`} />
       <span className="mt-1.5 text-[11px] font-semibold text-stone-400 sm:text-xs">
         target <strong className="text-stone-200">{tile.target.display}</strong>
         {tile.detail ? <span className="text-stone-400"> · {tile.detail}</span> : null}
@@ -91,28 +100,21 @@ function Quadrant({ q, tiles, role, onlyMine, onOpen, cadence }) {
   const unm = tiles.filter((t) => t.value == null).length
   return (
     <div>
-      <div className="flex items-start justify-between gap-2">
-        <div>
-          <h3 className="text-base font-extrabold tracking-tight text-gold-light">
-            <span aria-hidden="true">{q.icon}</span> {q.label}
-          </h3>
-          <p className="text-xs text-stone-400">{q.blurb}</p>
-        </div>
-        <div className="flex flex-none flex-col items-end gap-1 text-[10px] font-extrabold">
+      <div className="flex items-start justify-end gap-2">
+        <div className="flex flex-none flex-wrap items-end gap-1 text-[10px] font-extrabold">
           {reds > 0 && (
             <span className="rounded-full bg-rag-red-bg px-2 py-0.5 text-rag-red-fg">
-              ⚑ {reds} red
+              ⚑ {reds} failing
             </span>
           )}
           {unm > 0 && (
             <span className="rounded-full bg-rag-amber-bg px-2 py-0.5 text-rag-amber-fg">
-              ◐ {unm} unmeasured
+              ◐ {unm} not measured yet
             </span>
           )}
         </div>
       </div>
-      <div className="hairline mt-2" />
-      <div className="stagger mt-3 grid grid-cols-2 gap-2.5">
+      <div className="stagger mt-2 grid grid-cols-2 gap-2.5">
         {tiles.map((t, i) => {
           const mine = role && role !== 'leadership' && ownedBy(t, role)
           const cadenceHit = cadence && cadence !== 'monthly' && matchesCadence(t, cadence)
@@ -257,26 +259,16 @@ export function PeerModal({ zones, onSave, onClose }) {
 
 // ------------------------------------------------------------- Dashboard
 
-export function Dashboard({
-  profile,
-  card,
-  prog,
-  view,
-  onView,
-  onlyMine,
-  onOnlyMine,
-  onOpenTile,
-  onRestart,
-  onGoto,
-  peers,
-  onEditPeers,
-  benchMode,
-  onBenchMode,
-  scenes,
-  onScene,
-  entriesCount,
-  onResetEntries,
-}) {
+const CHAPTERS = [
+  { id: 'corniche', title: 'Overview' },
+  { id: 'al-hamra', title: 'Three numbers' },
+  { id: 'business-zone', title: 'Customer & selling' },
+  { id: 'industrial', title: 'Money' },
+  { id: 'academic', title: 'Learning' },
+  { id: 'mountains', title: 'Benchmark & next' },
+]
+
+export function Dashboard({ profile, card, prog, view, onOpenTile, onGoto, peers, onEditPeers, benchMode, onBenchMode, scenes, onScene, activeScene, entriesCount, onResetEntries, personalised }) {
   const rootRef = useRef(null)
   useSceneObserver(rootRef, onScene, [view])
   const role = profile.answers?.role
@@ -286,140 +278,82 @@ export function Dashboard({
   const cadMeta = CADENCE_META[cadence]
   const S = (id) => scenes.find((s) => s.id === id)
   const slide = view === 'slide'
-  const cadenceTiles = cadence && cadence !== 'monthly' ? card.tiles.filter((t) => matchesCadence(t, cadence) && t.quadrant !== 'hero') : []
+  const dashes = card.counts.total - card.counts.measured
+  const jump = (id) => rootRef.current?.querySelector(`[data-scene="${id}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 
   const asOf = useMemo(
-    () =>
-      SOURCES.filter((s) => s.feeds.length).map((s) => {
-        const live = card.tiles.some((t) => t.sourceId === s.id && t.live)
-        return { ...s, live }
-      }),
+    () => SOURCES.filter((s) => s.feeds.length).map((s) => ({ ...s, live: card.tiles.some((t) => t.sourceId === s.id && t.live) })),
     [card],
   )
+  const Band = ({ id }) => (slide ? <div className="h-3" /> : <SceneBand scene={S(id)} />)
 
   return (
     <div ref={rootRef} className="anim-screen flex flex-col gap-0 px-3 pb-12 pt-3">
-      {/* ---------------------------------------------------------- Header */}
-      <Panel data-scene="corniche" className="p-5">
+      {!slide && <ScrollRail chapters={CHAPTERS} active={activeScene} onJump={jump} />}
+
+      {/* ---------------------------------------------------------- Overview */}
+      <Panel data-scene="corniche" className="p-5 lg:p-7">
         <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="min-w-0">
-            <Eyebrow tone="brand">Balanced scorecard · monthly one-page view</Eyebrow>
-            <h2 className="mt-1 text-3xl font-light tracking-tight text-stone-50 lg:text-5xl">{BRAND.title}</h2>
-            <div className="hairline mt-3" />
-            <p className="mt-0.5 text-sm text-stone-400">
-              Period <strong className="text-stone-200">{BRAND.period}</strong> · 3 hero numbers · 4 quadrants × 4 tiles · 1 benchmark chart
-            </p>
-          </div>
-          <div className="flex flex-col items-end gap-1.5">
-            <span className={`rounded-full px-3 py-1 text-[11px] font-extrabold ${entriesCount ? 'bg-amber-400/15 text-amber-200' : 'bg-gold text-ink'}`}>
-              {entriesCount ? `Scenario · ${entriesCount} demo ${entriesCount === 1 ? 'entry' : 'entries'}` : BRAND.periodPill}
-            </span>
-            {entriesCount > 0 && (
-              <button className="text-xs font-semibold text-gold underline decoration-gold/50 underline-offset-2" onClick={onResetEntries}>
-                Reset to baseline
+          <Eyebrow tone="brand">RAKEZ · {BRAND.periodPill}</Eyebrow>
+          <span className={`rounded-full px-3 py-1 text-[11px] font-extrabold ${entriesCount ? 'bg-amber-400/15 text-amber-200' : 'bg-white/[0.06] text-stone-400'}`}>
+            {entriesCount ? `${entriesCount} demo ${entriesCount === 1 ? 'entry' : 'entries'} · ` : 'Static mock-up · '}
+            {entriesCount ? (
+              <button className="underline decoration-gold/50 underline-offset-2" onClick={onResetEntries}>
+                reset
               </button>
+            ) : (
+              'no live data'
             )}
-          </div>
+          </span>
         </div>
+        <h2 className="mt-2 text-4xl font-light tracking-tight text-stone-50 lg:text-6xl">Acquisition & Brand Scorecard</h2>
+        <p className="mt-3 max-w-[60ch] text-[15px] leading-relaxed text-stone-300 lg:text-lg">
+          One page, once a month. It answers a single question: <strong className="font-semibold text-gold-light">is the acquisition strategy lifting RAKEZ's brand, or just buying registrations?</strong>
+        </p>
+        <div className="hairline mt-4" />
 
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-          <div className="min-w-0">
-            <p className="text-[15px] font-bold text-stone-100">
-              {profile.name ? `${BRAND.greeting}, ${profile.name}` : `${BRAND.greeting}!`} <span aria-hidden="true">👋</span>
-              {roleMeta && (
-                <span className="ml-2 rounded-full bg-gold/10 px-2 py-0.5 text-[11px] font-extrabold text-gold-light">
-                  <span aria-hidden="true">{roleMeta.icon}</span> {roleMeta.label}
-                </span>
-              )}
-            </p>
-            {profile.bio && <p className="text-xs text-stone-400">{profile.bio}</p>}
-            <button className="mt-0.5 text-xs font-semibold text-gold underline decoration-gold/50 underline-offset-2" onClick={onRestart}>
-              Not {profile.name || 'you'}? Retake the questionnaire
-            </button>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Segmented
-              size="sm"
-              value={view}
-              onChange={onView}
-              options={[
-                { value: 'interactive', label: '🧊 Interactive' },
-                { value: 'slide', label: '🖼️ Slide' },
-              ]}
-            />
-            {role && role !== 'leadership' && (
-              <button
-                className={`rounded-full border px-3 py-1 text-xs font-bold transition active:scale-[0.98] ${
-                  onlyMine ? 'border-gold bg-gold/10 text-gold-light' : 'border-gold/20 bg-panel text-stone-400 hover:border-gold/70'
-                }`}
-                onClick={() => onOnlyMine(!onlyMine)}
-                aria-pressed={onlyMine}
-              >
-                {onlyMine ? '✓ Only my tiles' : 'Only my tiles'}
-              </button>
-            )}
-          </div>
-        </div>
-
-        <div className="mt-4 grid grid-cols-4 gap-2 text-center">
+        <p className="mt-4 text-[13px] text-stone-400">
+          Every tile shows today's number, the target, and one of three words. Tap any tile for the definition, the source and who owns it.
+        </p>
+        <div className="stagger mt-3 grid grid-cols-3 gap-2.5">
           {[
-            { k: 'red', n: card.counts.red },
-            { k: 'amber', n: card.counts.amber },
-            { k: 'green', n: card.counts.green },
-          ].map(({ k, n }) => (
-            <div key={k} className={`rounded-2xl px-2 py-2 ${STATUS_META[k].bg}`}>
-              <div className={`text-xl font-light tabular-nums ${STATUS_META[k].fg}`}>{n}</div>
-              <div className={`text-[10px] font-extrabold uppercase tracking-wide ${STATUS_META[k].fg}`}>
-                <span aria-hidden="true">{STATUS_META[k].icon}</span> {STATUS_META[k].label}
+            { k: 'red', n: card.counts.red, word: 'failing today', glow: true },
+            { k: 'amber', n: card.counts.amber, word: `not measured yet or below target` },
+            { k: 'green', n: card.counts.green, word: 'on target' },
+          ].map(({ k, n, word, glow }, i) => (
+            <div key={k} style={{ '--i': i }} className={`rounded-xl border border-gold/10 px-3 py-3 ${STATUS_META[k].bg} ${glow && n ? 'glow-red' : ''}`}>
+              <div className={`text-4xl font-light tabular-nums leading-none lg:text-5xl ${STATUS_META[k].fg}`}>
+                <CountUp value={n} duration={900} />
+              </div>
+              <div className={`mt-1.5 text-[11px] font-bold leading-snug ${STATUS_META[k].fg}`}>
+                <span aria-hidden="true">{STATUS_META[k].icon}</span> {word}
               </div>
             </div>
           ))}
-          <button className="rounded-2xl bg-white/[0.06] px-2 py-2 transition active:scale-[0.98] hover:bg-gold/10" onClick={() => onGoto('plan')}>
-            <div className="text-xl font-light tabular-nums text-stone-200">
-              {card.counts.measured}
-              <span className="text-sm text-stone-400">/{card.counts.total}</span>
-            </div>
-            <div className="text-[10px] font-extrabold uppercase tracking-wide text-stone-400">measured →</div>
-          </button>
         </div>
-
-        {cadenceTiles.length > 0 && !slide && (
-          <div className="mt-3 rounded-2xl bg-gold/10 px-4 py-3 text-[13px] text-gold-light">
-            <strong>
-              {cadence === 'weekly' ? '⚡' : '🔬'} {cadMeta.label} view
-            </strong>{' '}
-            — {cadMeta.note} Your tiles:{' '}
-            {cadenceTiles.map((t, i) => (
-              <button key={t.id} className="font-bold underline decoration-gold/50 underline-offset-2" onClick={() => onOpenTile(t.id)}>
-                {t.short}
-                {i < cadenceTiles.length - 1 ? ', ' : ''}
-              </button>
-            ))}
-          </div>
-        )}
-        {prog.done < prog.total && !slide && (
-          <button
-            className="mt-3 flex w-full items-center justify-between rounded-2xl border border-dashed border-amber-400/50 bg-amber-400/10 px-4 py-3 text-left transition active:scale-[0.99]"
-            onClick={() => onGoto('plan')}
-          >
-            <span className="text-[13px] font-semibold text-amber-200">
-              🗺️ Pilot plan: <strong>{prog.done} of {prog.total}</strong> data sources live · {card.counts.total - card.counts.measured} tiles still show a dash
+        <p className="mt-3 text-[12px] text-stone-500">
+          {card.counts.measured} of {card.counts.total} KPIs have a number today. The other {dashes} show a dash until their data source is switched on — never a made-up figure.
+        </p>
+        {personalised && (
+          <div className="mt-3 flex flex-wrap items-center gap-2 text-[12px] text-stone-400">
+            <span className="rounded-full bg-gold/10 px-2.5 py-1 font-bold text-gold-light">
+              <span aria-hidden="true">{roleMeta?.icon}</span> Viewing as {roleMeta?.label}
+              {cadMeta ? ` · ${cadMeta.label.toLowerCase()}` : ''}
             </span>
-            <span className="flex-none whitespace-nowrap text-sm font-bold text-amber-200">Open →</span>
-          </button>
+            <span>Your tiles carry a gold “yours” mark.</span>
+            <button className="font-semibold text-gold underline decoration-gold/50 underline-offset-2" onClick={() => onGoto('quiz')}>
+              Change
+            </button>
+          </div>
         )}
       </Panel>
 
-      {!slide && <SceneBand scene={S('al-hamra')} />}
-      {slide && <div className="h-3" />}
+      <Band id="al-hamra" />
 
-      {/* ---------------------------------------------------------- Hero */}
-      <Panel data-scene="al-hamra" className="p-4 lg:p-5">
-        <div className="flex items-center justify-between">
-          <Eyebrow tone="navy">Hero row</Eyebrow>
-          <span className="text-[11px] font-semibold text-stone-400">red marker = target</span>
-        </div>
-        <div className="stagger mt-3 grid grid-cols-3 gap-2.5 lg:gap-4">
+      {/* ---------------------------------------------------------- Three numbers */}
+      <Panel data-scene="al-hamra" className="p-4 lg:p-6">
+        <Chapter n={1} title="The three numbers that matter" says="If only these three move, the strategy is working. Red tick = target." />
+        <div className="flip grid grid-cols-3 gap-2.5 lg:gap-4">
           {card.hero.map((t, i) => (
             <div key={t.id} style={{ '--i': i }} className="flex">
               <HeroCard tile={t} focus={focus === t.id} onOpen={onOpenTile} />
@@ -427,116 +361,137 @@ export function Dashboard({
           ))}
         </div>
         {!slide && (
-          <div className="mt-4">
-            <div className="flex items-center justify-between">
-              <Eyebrow tone="navy">3D KPI skyline</Eyebrow>
-              <span className="text-[11px] font-semibold text-stone-400">19 towers · live from the tiles</span>
-            </div>
-            <Skyline3D hero={card.hero} byQuadrant={card.byQuadrant} onSelect={onOpenTile} className="mt-2 h-80 lg:h-96" />
-            <ModelCaption left="Height = progress to target · outline = target" right="Drag to orbit · tap a tower" />
+          <div className="mt-6">
+            <Chapter n="1b" title="The same 19 KPIs as a skyline" says="Each tower is one KPI. Taller means closer to target; red means failing today; the outline is the target. Drag to look around, tap a tower to open it." />
+            <Skyline3D hero={card.hero} byQuadrant={card.byQuadrant} onSelect={onOpenTile} className="h-80 lg:h-96" />
           </div>
         )}
       </Panel>
 
-      {!slide && <SceneBand scene={S('business-zone')} />}
-      {slide && <div className="h-3" />}
+      <Band id="business-zone" />
 
       {/* ---------------------------------------------------------- Quadrants */}
       {slide ? (
-        <Panel data-scene="business-zone" className="p-4 lg:p-5">
-          <Eyebrow tone="navy">Quadrant grid</Eyebrow>
-          <div className="mt-3 grid grid-cols-1 gap-6 lg:grid-cols-2">
-            {QUADRANTS.map((q) => (
-              <Quadrant key={q.id} q={q} tiles={card.byQuadrant[q.id]} role={role} onlyMine={onlyMine} onOpen={onOpenTile} cadence={cadence} />
+        <Panel data-scene="business-zone" className="p-4 lg:p-6">
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+            {QUADRANTS.map((q, i) => (
+              <div key={q.id}>
+                <Chapter n={i + 2} title={q.label} says={q.blurb} />
+                <Quadrant q={q} tiles={card.byQuadrant[q.id]} role={role} onlyMine={false} onOpen={onOpenTile} cadence={cadence} />
+              </div>
             ))}
           </div>
         </Panel>
       ) : (
         <>
-          <Panel data-scene="business-zone" className="p-4 lg:p-5">
-            <Eyebrow tone="navy">Quadrant grid · 1–2 of 4</Eyebrow>
-            <div className="mt-3 grid grid-cols-1 gap-6 lg:grid-cols-2">
-              {QUADRANTS.slice(0, 2).map((q) => (
-                <Quadrant key={q.id} q={q} tiles={card.byQuadrant[q.id]} role={role} onlyMine={onlyMine} onOpen={onOpenTile} cadence={cadence} />
-              ))}
+          <Panel data-scene="business-zone" className="p-4 lg:p-6">
+            <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+              <div>
+                <Chapter n={2} title="Customer" says="Do prospects and partners choose RAKEZ on value, or only when prompted?" />
+                <Quadrant q={QUADRANTS[0]} tiles={card.byQuadrant.customer} role={role} onlyMine={false} onOpen={onOpenTile} cadence={cadence} />
+              </div>
+              <div>
+                <Chapter n={3} title="How we sell" says="Is the first quote honest, complete and fast?" />
+                <Quadrant q={QUADRANTS[1]} tiles={card.byQuadrant.process} role={role} onlyMine={false} onOpen={onOpenTile} cadence={cadence} />
+              </div>
             </div>
           </Panel>
-          <SceneBand scene={S('industrial')} />
-          <Panel data-scene="industrial" className="p-4 lg:p-5">
-            <Eyebrow tone="navy">Quadrant grid · 3 of 4</Eyebrow>
-            <div className="mt-3">
-              <Quadrant q={QUADRANTS[2]} tiles={card.byQuadrant.financial} role={role} onlyMine={onlyMine} onOpen={onOpenTile} cadence={cadence} />
-            </div>
+          <Band id="industrial" />
+          <Panel data-scene="industrial" className="p-4 lg:p-6">
+            <Chapter n={4} title="Money" says="Is growth paid for sustainably? Three of these wait on the finance close." />
+            <Quadrant q={QUADRANTS[2]} tiles={card.byQuadrant.financial} role={role} onlyMine={false} onOpen={onOpenTile} cadence={cadence} />
           </Panel>
-          <SceneBand scene={S('academic')} />
-          <Panel data-scene="academic" className="p-4 lg:p-5">
-            <Eyebrow tone="navy">Quadrant grid · 4 of 4</Eyebrow>
-            <div className="mt-3">
-              <Quadrant q={QUADRANTS[3]} tiles={card.byQuadrant.learning} role={role} onlyMine={onlyMine} onOpen={onOpenTile} cadence={cadence} />
-            </div>
+          <Band id="academic" />
+          <Panel data-scene="academic" className="p-4 lg:p-6">
+            <Chapter n={5} title="Learning & growth" says="Are people, partners and content getting better every quarter?" />
+            <Quadrant q={QUADRANTS[3]} tiles={card.byQuadrant.learning} role={role} onlyMine={false} onOpen={onOpenTile} cadence={cadence} />
           </Panel>
         </>
       )}
 
-      {!slide && <SceneBand scene={S('mountains')} />}
-      {slide && <div className="h-3" />}
+      <Band id="mountains" />
 
       {/* ---------------------------------------------------------- Benchmark */}
-      <Panel data-scene="mountains" className="p-4 lg:p-5">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div>
-            <Eyebrow tone="navy">Benchmark</Eyebrow>
-            <p className="text-sm font-bold text-stone-100">Brand Equity score /100 and Google rating /5, per zone</p>
-          </div>
-          {!slide && (
-            <Segmented
-              size="sm"
-              value={benchMode}
-              onChange={onBenchMode}
-              options={[
-                { value: '3d', label: '🧊 3D' },
-                { value: '2d', label: '📊 2D' },
-              ]}
-            />
-          )}
-        </div>
-        <div className="mt-3">
-          {!slide && benchMode === '3d' ? (
-            <>
-              <Benchmark3D zones={peers} target={BENCHMARK.target} className="h-80 lg:h-96" />
-              <ModelCaption left="Dashed plane = target 70 · hatched = illustrative" right="Drag to orbit" />
-            </>
-          ) : (
-            <Benchmark2D zones={peers} target={BENCHMARK.target} />
-          )}
-        </div>
+      <Panel data-scene="mountains" className="p-4 lg:p-6">
+        <Chapter
+          n={6}
+          title="How RAKEZ compares"
+          says="Brand Equity score out of 100 and Google rating out of 5, per free zone. RAKEZ is red; the dashed line is the 70 target."
+          right={
+            !slide && (
+              <Segmented
+                size="sm"
+                value={benchMode}
+                onChange={onBenchMode}
+                options={[
+                  { value: '3d', label: '3D' },
+                  { value: '2d', label: '2D' },
+                ]}
+              />
+            )
+          }
+        />
+        {!slide && benchMode === '3d' ? (
+          <>
+            <Benchmark3D zones={peers} target={BENCHMARK.target} className="h-80 lg:h-96" />
+            <ModelCaption left="Dashed plane = target 70 · faded bars = illustrative" right="Drag to orbit" />
+          </>
+        ) : (
+          <Benchmark2D zones={peers} target={BENCHMARK.target} />
+        )}
         <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
           <p className="text-xs text-stone-400">
-            <strong className="text-stone-500">Peer values are illustrative</strong> (hatched) — replace with GIP III evidence. RAKEZ = Sep 2026 baseline.
+            <strong className="text-stone-300">Peer values are illustrative</strong> until the GIP III evidence is entered. RAKEZ is the real Sep 2026 baseline.
           </p>
           <button className={btn.secondary} onClick={onEditPeers}>
-            ✏️ Edit peer values (demo)
+            ✏️ Enter peer values
           </button>
         </div>
       </Panel>
 
       <div className="h-3" />
 
+      {/* ---------------------------------------------------------- Next */}
+      {!slide && (
+        <Panel className="p-4 lg:p-6">
+          <Chapter n={7} title="What happens next" says={`${dashes} tiles still show a dash because their data source is not switched on. The pilot plan wires them one by one; ${prog.done} of ${prog.total} sources are live.`} />
+          <div className="stagger grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+            <button style={{ '--i': 0 }} className="rounded-xl border border-gold/40 bg-gold/10 p-4 text-left transition active:scale-[0.99] hover:bg-gold/15" onClick={() => onGoto('plan')}>
+              <span className="block text-2xl" aria-hidden="true">🗺️</span>
+              <span className="mt-1 block text-[15px] font-bold text-gold-light">Switch on the data sources</span>
+              <span className="block text-xs text-stone-400">Pilot plan · {prog.total - prog.done} to go</span>
+            </button>
+            <button style={{ '--i': 1 }} className="rounded-xl border border-gold/20 p-4 text-left transition active:scale-[0.99] hover:bg-white/[0.04]" onClick={() => onGoto('rescoring')}>
+              <span className="block text-2xl" aria-hidden="true">🧮</span>
+              <span className="mt-1 block text-[15px] font-bold text-stone-100">Re-score Brand Equity</span>
+              <span className="block text-xs text-stone-400">Five dimensions, live composite</span>
+            </button>
+            <button style={{ '--i': 2 }} className="rounded-xl border border-gold/20 p-4 text-left transition active:scale-[0.99] hover:bg-white/[0.04]" onClick={() => onGoto('shop')}>
+              <span className="block text-2xl" aria-hidden="true">🕵️</span>
+              <span className="mt-1 block text-[15px] font-bold text-stone-100">Log a mystery-shop call</span>
+              <span className="block text-xs text-stone-400">Feeds three Customer tiles</span>
+            </button>
+          </div>
+        </Panel>
+      )}
+
+      <div className="h-3" />
+
       {/* ---------------------------------------------------------- Footer */}
       <Panel as="footer" className="p-4 text-xs text-stone-400">
-        <Eyebrow tone="muted">Data as-of per source</Eyebrow>
+        <Eyebrow tone="muted">Where each number comes from</Eyebrow>
         <ul className="mt-2 grid grid-cols-1 gap-1 sm:grid-cols-2 lg:grid-cols-3">
           {asOf.map((s) => (
-            <li key={s.id} className="flex items-center justify-between gap-2 rounded-xl bg-white/[0.04] px-3 py-1.5">
-              <span className="truncate font-semibold text-stone-500">
+            <li key={s.id} className="flex items-center justify-between gap-2 rounded-lg bg-white/[0.04] px-3 py-1.5">
+              <span className="truncate font-semibold text-stone-300">
                 <span aria-hidden="true">{s.icon}</span> {s.short}
               </span>
-              <span className={`flex-none font-bold ${s.live ? 'text-emerald-300' : 'text-stone-400'}`}>{s.live ? `✓ ${BRAND.period}` : '— not yet sourced'}</span>
+              <span className={`flex-none font-bold ${s.live ? 'text-emerald-300' : 'text-stone-500'}`}>{s.live ? `✓ ${BRAND.period}` : '— not yet'}</span>
             </li>
           ))}
         </ul>
         <p className="mt-3 leading-relaxed">
-          <strong className="text-stone-500">Indicative.</strong> Baselines are from the GIP III evidence (Sep 2026); targets are the 18-month horizon. {BRAND.guardrail}
+          <strong className="text-stone-300">Indicative.</strong> Baselines are from the GIP III evidence (Sep 2026); targets are the 18-month horizon. {BRAND.guardrail}
         </p>
         <p className="mt-1.5 leading-relaxed">
           {scenes.every((s) => !s.isPhoto)
@@ -626,7 +581,7 @@ export function TileSheet({ tile, onClose, onEntry, onClear, onGoto }) {
         )}
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <StatusChip meta={m} detail={m.reason} />
-          <span className="text-[11px] font-semibold text-stone-400">Rule: {tile.thresholds}</span>
+          <span className="text-[11px] font-semibold text-stone-400">{tile.status.rag} · rule: {tile.thresholds}</span>
         </div>
         {tile.signal && <p className="mt-2 text-[13px] text-stone-500">{tile.signal}</p>}
       </div>

@@ -6,9 +6,9 @@
 import { KPIS, SOURCES, BE_DIMENSIONS, ROLE_META, CADENCE_META, QUADRANTS, SHOP_PROTOCOL } from './data.js'
 
 export const STATUS_META = {
-  red: { tone: 'red', label: 'Red', icon: '⚑', hex: '#c2410c', fill: '#fef2ee', bg: 'bg-rag-red-bg', fg: 'text-rag-red-fg', ring: 'ring-rag-red-fg/30' },
-  amber: { tone: 'amber', label: 'Amber', icon: '◐', hex: '#b45309', fill: '#fef7e6', bg: 'bg-rag-amber-bg', fg: 'text-rag-amber-fg', ring: 'ring-rag-amber-fg/30' },
-  green: { tone: 'green', label: 'Green', icon: '✓', hex: '#15803d', fill: '#ecfdf3', bg: 'bg-rag-green-bg', fg: 'text-rag-green-fg', ring: 'ring-rag-green-fg/30' },
+  red: { tone: 'red', label: 'Red', word: 'Failing today', icon: '⚑', hex: '#c2410c', fill: '#fef2ee', bg: 'bg-rag-red-bg', fg: 'text-rag-red-fg', ring: 'ring-rag-red-fg/30' },
+  amber: { tone: 'amber', label: 'Amber', word: 'Not measured / below target', icon: '◐', hex: '#b45309', fill: '#fef7e6', bg: 'bg-rag-amber-bg', fg: 'text-rag-amber-fg', ring: 'ring-rag-amber-fg/30' },
+  green: { tone: 'green', label: 'Green', word: 'On target', icon: '✓', hex: '#15803d', fill: '#ecfdf3', bg: 'bg-rag-green-bg', fg: 'text-rag-green-fg', ring: 'ring-rag-green-fg/30' },
 }
 
 const clamp01 = (x) => Math.max(0, Math.min(1, x))
@@ -35,7 +35,20 @@ export function fmtValue(kpi, value) {
 }
 
 /** RAG status for a KPI at a value. Unmeasured is always amber (spec §3). */
+/** Plain words for a status, so a first-time reader needs no legend. */
+export function plainLabel(st, value) {
+  if (st.tone === 'green') return 'On target'
+  if (st.tone === 'red') return 'Failing today'
+  return value == null ? 'Not measured yet' : 'Below target'
+}
+
 export function status(kpi, value, ctx = {}) {
+  const r = kpi.rule
+  const out = statusRaw(kpi, value, ctx)
+  return { ...out, label: plainLabel(out, value), rag: STATUS_META[out.tone].label }
+}
+
+function statusRaw(kpi, value, ctx = {}) {
   const r = kpi.rule
   if (value == null) return { ...STATUS_META.amber, reason: 'Not yet measured' }
   switch (r.kind) {

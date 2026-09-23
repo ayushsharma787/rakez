@@ -14,8 +14,8 @@ export const BRAND = {
   tagline: 'Is acquisition lifting the brand, or just buying it?',
   pitch:
     'A monthly one-page balanced scorecard for RAKEZ commercial leadership. Three hero numbers, sixteen tiles and one benchmark chart track whether the acquisition strategy lifts brand equity while defending best-in-class conversion.',
-  primaryCta: '📊 Open the Sep 2026 scorecard',
-  secondaryCta: '🧭 Tailor it to my seat',
+  primaryCta: '📊 Back to the scorecard',
+  secondaryCta: '🧭 Personalise my view',
   footnote:
     'Demo mode — indicative Sep 2026 baselines from GIP III evidence; peer values illustrative. Static mock-up: it does not read RAKEZ systems. Unsourced KPIs show a dash, never a placeholder number.',
   generatingTitle: 'Assembling your scorecard view…',

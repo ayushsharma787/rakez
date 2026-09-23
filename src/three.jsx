@@ -274,7 +274,7 @@ export function Skyline3D({ hero, byQuadrant, onSelect, className = '' }) {
       <div className="pointer-events-none absolute left-3 top-3 flex flex-wrap gap-1.5">
         {['red', 'amber', 'green'].map((k) => (
           <span key={k} className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-extrabold ${STATUS_META[k].bg} ${STATUS_META[k].fg}`}>
-            <span aria-hidden="true">{STATUS_META[k].icon}</span> {STATUS_META[k].label}
+            <span aria-hidden="true">{STATUS_META[k].icon}</span> {STATUS_META[k].word}
           </span>
         ))}
       </div>
